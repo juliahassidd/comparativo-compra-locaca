@@ -1,434 +1,285 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { 
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, Legend 
-} from 'recharts';
-import { 
-  Car, Calendar, Map, TrendingUp, CheckCircle, Trophy, 
-  ChevronRight, ChevronLeft, RotateCcw, Wallet
+  Car, 
+  Key, 
+  Wallet, 
+  TrendingUp, 
+  ShieldCheck, 
+  Wrench, 
+  CheckCircle2, 
+  ArrowRight, 
+  ArrowLeft,
+  Info,
+  DollarSign,
+  Gauge
 } from 'lucide-react';
-
-const CARS = [
-  { 
-    id: 'hatch', 
-    name: 'Hatch Compacto', 
-    price: 80000, 
-    rentBase: 1800, 
-    icon: Car,
-    description: 'Econômico, ideal para o dia a dia.'
-  },
-  { 
-    id: 'sedan', 
-    name: 'Sedan Médio', 
-    price: 130000, 
-    rentBase: 2800, 
-    icon: Car,
-    description: 'Conforto e espaço para viagens.'
-  },
-  { 
-    id: 'suv', 
-    name: 'SUV Premium', 
-    price: 200000, 
-    rentBase: 4500, 
-    icon: Car,
-    description: 'Status, segurança e robustez.'
-  },
-];
-
-const DURATIONS = [
-  { id: 12, label: '12 meses', months: 12 },
-  { id: 24, label: '24 meses', months: 24 },
-  { id: 36, label: '36 meses', months: 36 },
-  { id: 48, label: '48 meses', months: 48 },
-];
-
-const MILEAGES = [
-  { id: 1000, label: '1.000 km/mês', multiplier: 1.0 },
-  { id: 1500, label: '1.500 km/mês', multiplier: 1.15 },
-  { id: 2000, label: '2.000 km/mês', multiplier: 1.30 },
-  { id: 3000, label: '3.000 km/mês', multiplier: 1.50 },
-];
-
-const ASSUMPTIONS = {
-  yield: 0.105,       // 10.5% a.a. Custo de oportunidade (aprox. Selic líquida)
-  depreciation: 0.10, // 10% a.a. Depreciação
-  maintenance: 0.05,  // 5% a.a. Manutenção, IPVA e Seguro
-};
-
-const formatCurrency = (value) => 
-  new Intl.NumberFormat('pt-BR', { 
-    style: 'currency', 
-    currency: 'BRL', 
-    maximumFractionDigits: 0 
-  }).format(value);
-
-const SelectableCard = ({ selected, onClick, icon: Icon, title, description, details, compact = false }) => (
-  <div
-    onClick={onClick}
-    className={`cursor-pointer rounded-2xl border-2 transition-all duration-200 relative flex flex-col h-full ${
-      compact ? 'p-4' : 'p-6'
-    } ${
-      selected 
-        ? 'border-slate-900 bg-slate-50 shadow-md scale-[1.02]' 
-        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-    }`}
-  >
-    {selected && (
-      <div className={`absolute ${compact ? 'top-2 right-2' : 'top-4 right-4'} text-slate-900 animate-in zoom-in duration-200`}>
-        <CheckCircle size={compact ? 20 : 24} className="fill-slate-200" />
-      </div>
-    )}
-    <div className={`mb-3 rounded-full flex items-center justify-center transition-colors ${
-      compact ? 'w-10 h-10' : 'w-12 h-12 mb-4'
-    } ${
-      selected ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
-    }`}>
-      <Icon size={compact ? 20 : 24} strokeWidth={2} />
-    </div>
-    <h3 className={`font-bold ${compact ? 'text-lg' : 'text-xl mb-1'} ${selected ? 'text-slate-900' : 'text-slate-800'}`}>
-      {title}
-    </h3>
-    {description && (
-      <p className="text-slate-500 text-sm mb-4 flex-grow">{description}</p>
-    )}
-    {details && (
-      <div className="w-full pt-3 border-t border-slate-100 flex flex-col gap-2 text-sm mt-auto">
-        {details.map((detail, idx) => (
-          <div key={idx} className="flex justify-between items-center">
-            <span className="text-slate-500">{detail.label}</span>
-            <span className="font-semibold text-slate-900">{detail.value}</span>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from 'recharts';
 
 export default function App() {
   const [step, setStep] = useState(1);
-  const [selectedCarId, setSelectedCarId] = useState(null);
-  const [selectedDuration, setSelectedDuration] = useState(null);
-  const [selectedMileage, setSelectedMileage] = useState(null);
+  const [selectedCar, setSelectedCar] = useState({ name: 'Fiat Pulse Audace 1.0 T', price: 115000, subCarmo: 2450 });
+  const [selectedPeriod, setSelectedPeriod] = useState(24);
+  const [selectedKm, setSelectedKm] = useState(1000);
+  const [selectedPayment, setSelectedPayment] = useState('avista');
 
-  const results = useMemo(() => {
-    if (!selectedCarId || !selectedDuration || !selectedMileage) return null;
-    
-    const car = CARS.find(c => c.id === selectedCarId);
-    const mileageData = MILEAGES.find(m => m.id === selectedMileage);
-    const years = selectedDuration / 12;
+  const cars = [
+    { name: 'Fiat Pulse Audace 1.0 T', price: 115000, subCarmo: 2450, img: '🚗' },
+    { name: 'VW Nivus Highline 200 TSI', price: 135000, subCarmo: 2890, img: '🚙' },
+    { name: 'Jeep Renegade Sport T270', price: 125000, subCarmo: 2750, img: '🚘' },
+    { name: 'Toyota Corolla XEI 2.0', price: 155000, subCarmo: 3400, img: '🏎️' }
+  ];
 
-    // Custos da Assinatura
-    const monthlyRent = car.rentBase * mileageData.multiplier;
-    const rentTotal = monthlyRent * selectedDuration;
-    
-    // Custos da Compra
-    const depreciation = car.price * ASSUMPTIONS.depreciation * years;
-    const maintenance = car.price * ASSUMPTIONS.maintenance * years;
-    // Juros compostos sobre o valor imobilizado (Custo de Oportunidade)
-    const opportunityCost = car.price * (Math.pow(1 + ASSUMPTIONS.yield, years) - 1);
-    const buyTotal = depreciation + maintenance + opportunityCost;
+  const periods = [
+    { months: 12, label: '1 Ano (12 meses)' },
+    { months: 24, label: '2 Anos (24 meses)' },
+    { months: 36, label: '3 Anos (36 meses)' },
+    { months: 48, label: '4 Anos (48 meses)' }
+  ];
 
-    const winner = buyTotal < rentTotal ? 'buy' : 'rent';
-    const difference = Math.abs(buyTotal - rentTotal);
-    const percentage = ((difference / Math.max(buyTotal, rentTotal)) * 100).toFixed(1);
+  const kmOptions = [
+    { km: 1000, label: '1.000 km / mês' },
+    { km: 1500, label: '1.500 km / mês' },
+    { km: 2000, label: '2.000 km / mês' },
+    { km: 3000, label: '3.000 km / mês' }
+  ];
 
-    // Gerando dados mês a mês para o gráfico de área
-    const chartData = [];
-    for (let m = 1; m <= selectedDuration; m++) {
-      const mYears = m / 12;
-      const mRent = monthlyRent * m;
-      const mDep = car.price * ASSUMPTIONS.depreciation * mYears;
-      const mMaint = car.price * ASSUMPTIONS.maintenance * mYears;
-      const mOpp = car.price * (Math.pow(1 + ASSUMPTIONS.yield, mYears) - 1);
-      const mBuy = mDep + mMaint + mOpp;
+  const paymentOptions = [
+    { id: 'avista', title: 'À Vista', desc: 'Dinheiro na conta (rende 10% a.a.)' },
+    { id: 'financiado', title: 'Financiado', desc: 'Entrada 30% + taxas bancárias' }
+  ];
 
-      chartData.push({
-        name: `Mês ${m}`,
-        Assinatura: Math.round(mRent),
-        Compra: Math.round(mBuy)
-      });
-    }
+  // Cálculos Financeiros
+  const carPrice = selectedCar.price;
+  const monthlySubscription = selectedCar.subCarmo + ((selectedKm - 1000) * 150); // Ajuste de KM
+  const totalSubscription = monthlySubscription * selectedPeriod;
 
-    const barData = [
-      { name: 'Custo Total Perdido', Compra: buyTotal, Assinatura: rentTotal }
-    ];
+  // Compra
+  const depreciationRateAnnual = 0.10;
+  const maintenanceRateAnnual = 0.05;
+  const oppCostRateAnnual = 0.10; // 10% a.a.
 
-    return { 
-      car, monthlyRent, rentTotal, depreciation, maintenance, opportunityCost, buyTotal, 
-      winner, difference, percentage, chartData, barData 
-    };
-  }, [selectedCarId, selectedDuration, selectedMileage]);
+  const totalDepreciation = carPrice * (Math.pow(1 + depreciationRateAnnual, selectedPeriod / 12) - 1);
+  const totalMaintenance = (carPrice * maintenanceRateAnnual) * (selectedPeriod / 12);
+  const totalOppCost = selectedPayment === 'avista' ? (carPrice * oppCostRateAnnual * (selectedPeriod / 12)) : (carPrice * 0.3 * oppCostRateAnnual * (selectedPeriod / 12));
+  
+  // IPVA e Seguro estimado em 6% a.a. no total
+  const totalIpvaSeguro = (carPrice * 0.06) * (selectedPeriod / 12);
 
-  const nextStep = () => setStep(prev => Math.min(prev + 1, 3));
-  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
-  const resetWizard = () => {
-    setStep(1);
-    setSelectedCarId(null);
-    setSelectedDuration(null);
-    setSelectedMileage(null);
-  };
+  const totalPurchaseCost = totalDepreciation + totalMaintenance + totalOppCost + totalIpvaSeguro;
 
-  const renderStep1 = () => (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">Qual o modelo desejado?</h2>
-        <p className="text-slate-500">Selecione a categoria do veículo para simular.</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {CARS.map(car => (
-          <SelectableCard
-            key={car.id}
-            selected={selectedCarId === car.id}
-            onClick={() => setSelectedCarId(car.id)}
-            icon={car.icon}
-            title={car.name}
-            description={car.description}
-            details={[
-              { label: 'Valor do Veículo', value: formatCurrency(car.price) },
-              { label: 'Assinatura a partir de', value: formatCurrency(car.rentBase) }
-            ]}
-          />
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-      <div>
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Tempo de Contrato</h2>
-          <p className="text-slate-500 text-sm">O tempo impacta a depreciação e o custo de oportunidade.</p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {DURATIONS.map(dur => (
-            <SelectableCard
-              key={dur.id} compact
-              selected={selectedDuration === dur.months}
-              onClick={() => setSelectedDuration(dur.months)}
-              icon={Calendar} title={dur.label}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Franquia de Quilometragem</h2>
-          <p className="text-slate-500 text-sm">Quanto você costuma rodar por mês?</p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {MILEAGES.map(mil => (
-            <SelectableCard
-              key={mil.id} compact
-              selected={selectedMileage === mil.id}
-              onClick={() => setSelectedMileage(mil.id)}
-              icon={Map} title={mil.label}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderStep3 = () => {
-    if (!results) return null;
-    const isRentWinner = results.winner === 'rent';
-
-    return (
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-        
-        {/* Banner Veredito */}
-        <div className={`p-6 md:p-8 rounded-3xl flex flex-col md:flex-row items-center gap-6 text-white shadow-lg ${isRentWinner ? 'bg-slate-900' : 'bg-emerald-600'}`}>
-          <div className="p-4 bg-white/10 rounded-full backdrop-blur-sm">
-            <Trophy size={40} className="text-white" />
-          </div>
-          <div className="text-center md:text-left flex-grow">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              A {isRentWinner ? 'Locação' : 'Compra'} venceu!
-            </h2>
-            <p className="text-base md:text-lg opacity-90">
-              Fica <strong className="font-bold">{results.percentage}% mais barato</strong> {isRentWinner ? 'assinar' : 'comprar'} por {selectedDuration} meses.
-            </p>
-          </div>
-          <div className="text-center md:text-right bg-white/10 p-4 rounded-2xl backdrop-blur-sm min-w-[200px]">
-            <p className="text-xs opacity-80 mb-1 uppercase tracking-wider font-semibold">Sua Economia Total</p>
-            <p className="text-3xl font-bold">{formatCurrency(results.difference)}</p>
-          </div>
-        </div>
-
-        {/* Breakdown Financeiro */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-              <div className="p-2 bg-slate-100 text-slate-700 rounded-lg"><Wallet size={20} /></div>
-              <h3 className="text-lg font-bold text-slate-900">Custos da Compra</h3>
-            </div>
-            <div className="space-y-3 flex-grow mb-6 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-600">Depreciação ({ASSUMPTIONS.depreciation * 100}% a.a.)</span> 
-                <span className="font-medium text-slate-900">{formatCurrency(results.depreciation)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Manutenção/Seguro ({ASSUMPTIONS.maintenance * 100}% a.a.)</span> 
-                <span className="font-medium text-slate-900">{formatCurrency(results.maintenance)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Custo Oportunidade ({(ASSUMPTIONS.yield * 100).toFixed(1)}% a.a.)</span> 
-                <span className="font-medium text-slate-900">{formatCurrency(results.opportunityCost)}</span>
-              </div>
-            </div>
-            <div className="pt-4 border-t border-slate-200 flex justify-between items-end">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Custo Gerado</span>
-              <span className="text-2xl font-bold text-slate-900">{formatCurrency(results.buyTotal)}</span>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-              <div className="p-2 bg-slate-100 text-slate-700 rounded-lg"><Calendar size={20} /></div>
-              <h3 className="text-lg font-bold text-slate-900">Custos da Locação</h3>
-            </div>
-            <div className="space-y-3 flex-grow mb-6 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-600">Mensalidades ({selectedDuration}x de {formatCurrency(results.monthlyRent)})</span> 
-                <span className="font-medium text-slate-900">{formatCurrency(results.rentTotal)}</span>
-              </div>
-              <div className="flex justify-between opacity-50">
-                <span className="text-slate-600">Depreciação</span> 
-                <span className="font-medium text-slate-900">Isento</span>
-              </div>
-              <div className="flex justify-between opacity-50">
-                <span className="text-slate-600">IPVA, Seguro e Manutenção</span> 
-                <span className="font-medium text-slate-900">Incluso</span>
-              </div>
-            </div>
-            <div className="pt-4 border-t border-slate-200 flex justify-between items-end">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Custo Gerado</span>
-              <span className="text-2xl font-bold text-slate-900">{formatCurrency(results.rentTotal)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Gráficos Combinados */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-1 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900 mb-6 text-center uppercase tracking-wide">Custo Total</h3>
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={results.barData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" hide />
-                  <YAxis hide />
-                  <Tooltip formatter={(value) => formatCurrency(value)} cursor={{fill: 'transparent'}} />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                  <Bar dataKey="Compra" fill="#94a3b8" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Assinatura" fill="#0f172a" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="md:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900 mb-6 text-center uppercase tracking-wide">Evolução do Custo ao Longo dos Meses</h3>
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={results.chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorCompra" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorAssinatura" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0f172a" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#0f172a" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis hide />
-                  <Tooltip 
-                    formatter={(value) => formatCurrency(value)}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Area type="monotone" name="Custo da Compra" dataKey="Compra" stroke="#94a3b8" strokeWidth={3} fillOpacity={1} fill="url(#colorCompra)" />
-                  <Area type="monotone" name="Custo da Assinatura" dataKey="Assinatura" stroke="#0f172a" strokeWidth={3} fillOpacity={1} fill="url(#colorAssinatura)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    );
-  };
+  // Dados para o Gráfico de Evolução Mensal
+  const chartData = [];
+  for (let m = 1; m <= selectedPeriod; m += Math.max(1, Math.floor(selectedPeriod / 6))) {
+    const subCost = monthlySubscription * m;
+    const purCost = (totalPurchaseCost / selectedPeriod) * m;
+    chartData.push({
+      mes: `Mês ${m}`,
+      Assinatura: Math.round(subCost),
+      Compra: Math.round(purCost),
+    });
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8 flex items-center justify-center">
-      <div className="max-w-5xl w-full mx-auto">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-sm border border-slate-200 mb-4 text-slate-900">
-            <TrendingUp size={28} />
+        <div className="bg-slate-900 text-white p-6 md:p-8">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="bg-indigo-600 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider">Simulador Inteligente</span>
           </div>
-          <h1 className="text-2xl md:text-4xl font-bold tracking-tight mb-2">
-            Comprar ou Assinar?
-          </h1>
-          <p className="text-slate-500 max-w-xl mx-auto text-sm md:text-base">
-            Simule o custo real financeiro (depreciação e custo de oportunidade) contra o modelo de assinatura.
-          </p>
+          <h1 className="text-2xl md:text-3xl font-bold">Compra vs. Carro por Assinatura</h1>
+          <p className="text-slate-400 text-sm mt-1">Descubra qual modalidade faz mais sentido para o seu bolso e estilo de vida.</p>
         </div>
 
-        {/* Wizard Card */}
-        <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-200/60 p-6 md:p-10 min-h-[500px] flex flex-col">
+        {/* Progress Bar */}
+        <div className="bg-slate-100 px-6 py-3 flex justify-between items-center text-xs font-medium text-slate-600 border-b">
+          <span className={`${step >= 1 ? 'text-indigo-600 font-bold' : ''}`}>1. Veículo & Uso</span>
+          <span>&gt;</span>
+          <span className={`${step >= 2 ? 'text-indigo-600 font-bold' : ''}`}>2. Prazo & Pagamento</span>
+          <span>&gt;</span>
+          <span className={`${step >= 3 ? 'text-indigo-600 font-bold' : ''}`}>3. Resultado Final</span>
+        </div>
+
+        {/* Conteúdo dos Passos */}
+        <div className="p-6 md:p-8">
           
-          {/* Progress Indicator */}
-          {step < 3 && (
-            <div className="flex items-center justify-center mb-10">
-              <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}>1</div>
-                <div className={`w-16 h-1 rounded-full transition-colors ${step >= 2 ? 'bg-slate-900' : 'bg-slate-100'}`} />
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= 2 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}>2</div>
-                <div className={`w-16 h-1 rounded-full transition-colors ${step >= 3 ? 'bg-slate-900' : 'bg-slate-100'}`} />
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= 3 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}>3</div>
+          {/* PASSO 1 */}
+          {step === 1 && (
+            <div>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Car className="text-indigo-600" /> Escolha o Modelo do Carro
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {cars.map((car, idx) => (
+                  <div 
+                    key={idx}
+                    onClick={() => setSelectedCar(car)}
+                    className={`p-5 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${selectedCar.name === car.name ? 'border-indigo-600 bg-indigo-50/50 shadow-md' : 'border-slate-200 hover:border-slate-300'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-3xl">{car.img}</span>
+                      <div>
+                        <h3 className="font-bold text-slate-800">{car.name}</h3>
+                        <p className="text-sm text-slate-500">Valor ref: R$ {car.price.toLocaleString('pt-BR')}</p>
+                      </div>
+                    </div>
+                    {selectedCar.name === car.name && <CheckCircle2 className="text-indigo-600" />}
+                  </div>
+                ))}
+              </div>
+
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Gauge className="text-indigo-600" /> Quilometragem Mensal Desejada
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                {kmOptions.map((k) => (
+                  <div
+                    key={k.km}
+                    onClick={() => setSelectedKm(k.km)}
+                    className={`p-4 rounded-xl border-2 text-center cursor-pointer transition-all ${selectedKm === k.km ? 'border-indigo-600 bg-indigo-50/50 font-bold text-indigo-900' : 'border-slate-200 text-slate-700'}`}
+                  >
+                    {k.label}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-end">
+                <button 
+                  onClick={() => setStep(2)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-indigo-200"
+                >
+                  Continuar <ArrowRight size={18} />
+                </button>
               </div>
             </div>
           )}
 
-          {/* Dynamic Content */}
-          <div className="flex-grow flex flex-col justify-center">
-            {step === 1 && renderStep1()}
-            {step === 2 && renderStep2()}
-            {step === 3 && renderStep3()}
-          </div>
+          {/* PASSO 2 */}
+          {step === 2 && (
+            <div>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <TrendingUp className="text-indigo-600" /> Qual o Período de Análise?
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {periods.map((p) => (
+                  <div
+                    key={p.months}
+                    onClick={() => setSelectedPeriod(p.months)}
+                    className={`p-5 rounded-xl border-2 text-center cursor-pointer transition-all ${selectedPeriod === p.months ? 'border-indigo-600 bg-indigo-50/50 font-bold text-indigo-900 shadow-md' : 'border-slate-200 text-slate-700'}`}
+                  >
+                    {p.label}
+                  </div>
+                ))}
+              </div>
 
-          {/* Navigation */}
-          <div className="mt-10 pt-6 border-t border-slate-100 flex items-center justify-between">
-            {step > 1 && step < 3 ? (
-              <button onClick={prevStep} className="flex items-center px-5 py-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl font-medium transition-colors">
-                <ChevronLeft size={20} className="mr-1" /> Voltar
-              </button>
-            ) : <div />}
-            
-            {step === 1 && (
-              <button disabled={!selectedCarId} onClick={nextStep} className="flex items-center px-6 py-3 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 disabled:opacity-50 transition-all shadow-md ml-auto">
-                Próximo Passo <ChevronRight size={20} className="ml-1" />
-              </button>
-            )}
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Wallet className="text-indigo-600" /> Forma de Aquisição na Compra
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {paymentOptions.map((pay) => (
+                  <div
+                    key={pay.id}
+                    onClick={() => setSelectedPayment(pay.id)}
+                    className={`p-5 rounded-xl border-2 cursor-pointer transition-all ${selectedPayment === pay.id ? 'border-indigo-600 bg-indigo-50/50 shadow-md' : 'border-slate-200'}`}
+                  >
+                    <h3 className="font-bold text-slate-800">{pay.title}</h3>
+                    <p className="text-sm text-slate-500 mt-1">{pay.desc}</p>
+                  </div>
+                ))}
+              </div>
 
-            {step === 2 && (
-              <button disabled={!selectedDuration || !selectedMileage} onClick={nextStep} className="flex items-center px-6 py-3 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 disabled:opacity-50 transition-all shadow-md ml-auto">
-                Ver Resultados <TrendingUp size={20} className="ml-2" />
-              </button>
-            )}
+              <div className="flex justify-between">
+                <button 
+                  onClick={() => setStep(1)}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 transition-all"
+                >
+                  <ArrowLeft size={18} /> Voltar
+                </button>
+                <button 
+                  onClick={() => setStep(3)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-indigo-200"
+                >
+                  Ver Resultado <ArrowRight size={18} />
+                </button>
+              </div>
+            </div>
+          )}
 
-            {step === 3 && (
-              <button onClick={resetWizard} className="mx-auto flex items-center px-6 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold rounded-xl transition-all">
-                <RotateCcw size={20} className="mr-2" /> Refazer Simulação
-              </button>
-            )}
-          </div>
+          {/* PASSO 3 - RESULTADOS */}
+          {step === 3 && (
+            <div>
+              <div className="bg-indigo-900 text-white p-6 rounded-2xl mb-8 shadow-lg">
+                <span className="bg-indigo-700 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider">Veredito do Simulador</span>
+                <h3 className="text-2xl font-bold mt-2">
+                  {totalSubscription < totalPurchaseCost ? 'Carro por Assinatura é mais vantajoso!' : 'Comprar o Carro é mais vantajoso!'}
+                </h3>
+                <p className="text-indigo-200 text-sm mt-1">
+                  Considerando depreciação de 10% a.a., custos de manutenção, IPVA, seguro e custo de oportunidade do capital.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="border-2 border-indigo-100 bg-indigo-50/30 p-6 rounded-2xl">
+                  <h4 className="font-bold text-slate-700 text-lg mb-2">🚗 Carro por Assinatura</h4>
+                  <p className="text-3xl font-extrabold text-indigo-600 mb-4">R$ {Math.round(totalSubscription).toLocaleString('pt-BR')}</p>
+                  <ul className="space-y-2 text-sm text-slate-600">
+                    <li>• Sem preocupação com revenda</li>
+                    <li>• Seguro, IPVA e revisões inclusos</li>
+                    <li>• Parcela mensal fixa: R$ {Math.round(monthlySubscription).toLocaleString('pt-BR')}</li>
+                  </ul>
+                </div>
+
+                <div className="border-2 border-slate-200 p-6 rounded-2xl">
+                  <h4 className="font-bold text-slate-700 text-lg mb-2">💰 Compra Direta</h4>
+                  <p className="text-3xl font-extrabold text-slate-800 mb-4">R$ {Math.round(totalPurchaseCost).toLocaleString('pt-BR')}</p>
+                  <ul className="space-y-2 text-sm text-slate-600">
+                    <li>• Inclui depreciação real do veículo</li>
+                    <li>• Custo de oportunidade do capital (10% a.a.)</li>
+                    <li>• Manutenção e seguros anuais estimados</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Gráfico */}
+              <div className="mb-8">
+                <h4 className="font-bold text-slate-800 mb-4">Evolução Comparativa de Custos ao Longo do Tempo</h4>
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="mes" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`} />
+                      <Legend />
+                      <Area type="monotone" dataKey="Assinatura" stroke="#6366f1" fill="#818cf8" fillOpacity={0.3} />
+                      <Area type="monotone" dataKey="Compra" stroke="#64748b" fill="#94a3b8" fillOpacity={0.3} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="flex justify-between">
+                <button 
+                  onClick={() => setStep(2)}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-6 py-3 rounded-xl flex items-center gap-2 transition-all"
+                >
+                  <ArrowLeft size={18} /> Refazer Simulação
+                </button>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
